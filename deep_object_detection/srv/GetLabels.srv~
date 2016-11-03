@@ -1,5 +1,0 @@
-int getlabels # just a dummy command to request labels
-
----
-
-string[] labels # a list of labels that the deep-net can detect
