@@ -1,0 +1,5 @@
+*.so
+*.caffemodel
+bbox.c
+*.tar.gz
+*.tgz

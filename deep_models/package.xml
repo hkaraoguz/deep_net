@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+  <name>deep_models</name>
+  <version>1.0.0</version>
+  <description>deep models package</description>
+
+  <maintainer email="hkarao@kth.se">Hakan Karaoguz</maintainer>
+
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

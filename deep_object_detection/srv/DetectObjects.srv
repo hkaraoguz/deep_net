@@ -1,0 +1,6 @@
+sensor_msgs/Image[] images # image that will be analyzed
+
+float32 confidence_threshold # the confidence threshold. The default value is 0.8
+
+---
+Object[] objects # the objects that are found
