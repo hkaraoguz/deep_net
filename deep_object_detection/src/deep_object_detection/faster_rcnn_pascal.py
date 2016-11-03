@@ -141,7 +141,7 @@ class FasterRCNNPascal():
 
         if not os.path.isfile(self.caffemodel):
             raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
+                       'fetch_faster_rcnn_models.sh?').format(self.caffemodel))
 
         s = rospy.Service('deep_object_detection/detect_objects', DetectObjects, self.handle_detect_objects_req)
         s2 = rospy.Service('deep_object_detection/get_labels', GetLabels, self.handle_getlabels_req)

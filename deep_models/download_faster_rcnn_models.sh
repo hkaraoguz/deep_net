@@ -20,6 +20,7 @@ fi
 FILE=faster_rcnn_models.tgz
 URL=http://www.cs.berkeley.edu/~rbg/faster-rcnn-data/$FILE
 CHECKSUM=ac116844f66aefe29587214272054668
+DIRECTORY=./faster_rcnn_models
 
 if [ -f $FILE ]; then
   echo "File already exists. Checking md5..."
@@ -31,6 +32,10 @@ if [ -f $FILE ]; then
   fi
   if [ "$checksum" = "$CHECKSUM" ]; then
     echo "Checksum is correct. No need to download."
+    if [ -d "$DIRECTORY" ]; then
+    	mv ./faster_rcnn_models/* .
+        rmdir ./faster_rcnn_models
+    fi
     exit 0
   else
     echo "Checksum is incorrect. Need to download again."
@@ -44,6 +49,8 @@ wget $URL -O $FILE -P ./caffe
 echo "Unzipping..."
 
 tar zxvf $FILE
+
+mv ./faster_rcnn_models/* .
 
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
 
