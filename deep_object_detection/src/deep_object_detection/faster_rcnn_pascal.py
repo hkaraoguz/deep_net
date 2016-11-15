@@ -14,12 +14,13 @@ import os
 '''
 Insert pyfaster to the PYTHON_PATH
 '''
+'''
 rp = RosPack()
 path = rp.get_path('deep_object_detection')
 syspath = os.path.join(path,'src','libpyfaster')
 sys.path.insert(0, syspath)
 "'''''''''''''''''''''''''''''''''''''''''''''''''"
-
+'''
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
@@ -28,6 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import caffe
+#print caffe.__file__
 import cv2
 import argparse
 from deep_object_detection.srv import *
@@ -85,7 +87,8 @@ class FasterRCNNPascal():
         objects = []
         for cls_ind, cls in enumerate(self.CLASSES[1:]):
             cls_ind += 1 # because we skipped background
-            cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+            #cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+            cls_boxes = boxes[:, 4:8]
             cls_scores = scores[:, cls_ind]
             dets = np.hstack((cls_boxes,cls_scores[:, np.newaxis])).astype(np.float32)
             keep = nms(dets, NMS_THRESH)
@@ -126,7 +129,10 @@ class FasterRCNNPascal():
 		     'vgg16KTH': ('VGG16KTH',
                       'vgg16_faster_rcnn_iter_40000_kth2.caffemodel'),
             'zf': ('ZF',
-                      'ZF_faster_rcnn_final.caffemodel')}
+                      'ZF_faster_rcnn_final.caffemodel'), 'ResNet-101': ('ResNet-101',
+                  'resnet101_rfcn_final.caffemodel'),
+        'ResNet-50': ('ResNet-50',
+                  'resnet50_rfcn_final.caffemodel')}
         if network_name == 'vgg16KTH':
             self.CLASSES = ('__background__',
               'chair','laptop','monitor')
@@ -134,6 +140,9 @@ class FasterRCNNPascal():
 
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
         self.prototxt = os.path.join(path, network_name,'protos', 'faster_rcnn_test.pt')
+        if network_name.find('Res')>=0:
+            self.prototxt = os.path.join(path,'rfcn', self.NETS[network_name][0],'test_agnostic.prototxt')
+
 
         self.gpu_id = gpu_id
 
