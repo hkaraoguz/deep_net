@@ -11,16 +11,7 @@ from rospkg import RosPack
 import sys
 import os
 
-'''
-Insert pyfaster to the PYTHON_PATH
-'''
-'''
-rp = RosPack()
-path = rp.get_path('deep_object_detection')
-syspath = os.path.join(path,'src','libpyfaster')
-sys.path.insert(0, syspath)
-"'''''''''''''''''''''''''''''''''''''''''''''''''"
-'''
+
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
@@ -87,8 +78,10 @@ class FasterRCNNPascal():
         objects = []
         for cls_ind, cls in enumerate(self.CLASSES[1:]):
             cls_ind += 1 # because we skipped background
-            #cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-            cls_boxes = boxes[:, 4:8]
+            if self.network_name.find("Res") < 0:
+                cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+            else:
+                cls_boxes = boxes[:, 4:8]
             cls_scores = scores[:, cls_ind]
             dets = np.hstack((cls_boxes,cls_scores[:, np.newaxis])).astype(np.float32)
             keep = nms(dets, NMS_THRESH)
@@ -116,6 +109,8 @@ class FasterRCNNPascal():
         rp = RosPack()
 
         path = rp.get_path('deep_models')
+
+        self.network_name = network_name
 
         self.CLASSES = ('__background__',
                'aeroplane', 'bicycle', 'bird', 'boat',
@@ -154,5 +149,5 @@ class FasterRCNNPascal():
 
         s = rospy.Service('deep_object_detection/detect_objects', DetectObjects, self.handle_detect_objects_req)
         s2 = rospy.Service('deep_object_detection/get_labels', GetLabels, self.handle_getlabels_req)
-        print "Ready to detect objects"
+        rospy.loginfo("Ready to detect objects")
         rospy.spin()
