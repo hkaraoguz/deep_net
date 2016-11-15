@@ -4,6 +4,7 @@ DEPLOYDIR=./caffe
 mkdir -p "$DEPLOYDIR"
 cd $DEPLOYDIR
 
+echo "Downloading KTH model..."
 FILE=vgg16_faster_rcnn_iter_40000_kth2.caffemodel.tar.gz
 URL=https://www.dropbox.com/s/podka2mhub8scxu/$FILE?dl=1
 if [ -f $FILE ]; then
@@ -15,6 +16,24 @@ else
   wget $URL -O $FILE -P ./caffe
   tar zxvf $FILE
 fi
+
+echo "Downloading rfcn models..."
+FILE=rfcn_models.tar.gz
+URL=https://www.dropbox.com/s/lnz0r8uk9ax1mey/rfcn_models.tar.gz?dl=1
+if [ -f $FILE ]; then
+  echo "File already exists."
+  echo "Unzipping..."
+  tar zxvf $FILE
+  mv ./rfcn_models/* .
+  rm -r ./rfcn_models
+else
+  echo "Downloading ResNet models..."
+  wget $URL -O $FILE -P ./caffe
+  tar zxvf $FILE
+  mv ./rfcn_models/* .
+  rm -r ./rfcn_models
+fi
+
 
 
 FILE=faster_rcnn_models.tgz
