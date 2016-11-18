@@ -32,7 +32,8 @@ class FasterRCNNPascal():
 
     """ The handle for object detection service requests """
     def handle_detect_objects_req(self,req):
-        net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
+	if self.net == None:        
+		self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
         bridge = CvBridge()
         results = []
         for index,image in enumerate(req.images):
@@ -46,13 +47,19 @@ class FasterRCNNPascal():
 
                 # if confidence threshold is not set, default=0.8
                 if req.confidence_threshold == 0:
-                    self.detect_objects(results,net,cv_image,index)
+                    self.detect_objects(results,self.net,cv_image,index)
+                    
                 else:
-                    self.detect_objects(results,net,cv_image,index,req.confidence_threshold)
+                    self.detect_objects(results,self.net,cv_image,index,req.confidence_threshold)
+		    
 		    #results.append(result)
             except CvBridgeError as e:
                 print(e)
+                del self.net
+                self.net = None
                 return DetectObjectsResponse([])
+        del self.net
+        self.net = None
         return DetectObjectsResponse(results)
 
     def handle_getlabels_req(self,req):
@@ -138,7 +145,7 @@ class FasterRCNNPascal():
         if network_name.find('Res')>=0:
             self.prototxt = os.path.join(path,'rfcn', self.NETS[network_name][0],'test_agnostic.prototxt')
 
-
+	self.net = None
         self.gpu_id = gpu_id
 
         self.caffemodel = os.path.join(path, 'caffe', self.NETS[network_name][1])
