@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 """
 ROS Node for object detection using py-faster-rcnn
 https://github.com/rbgirshick/py-faster-rcnn.git
@@ -32,8 +31,12 @@ class FasterRCNNPascal():
 
     """ The handle for object detection service requests """
     def handle_detect_objects_req(self,req):
-	if self.net == None:        
-		self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
+        if self.net == None:
+            self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
+        if self.unload_net_timer:
+            self.unload_net_timer.shutdown()
+            del self.unload_net_timer
+        self.unload_net_timer = rospy.Timer(rospy.Duration(60), self.unload_net_callback)
         bridge = CvBridge()
         results = []
         for index,image in enumerate(req.images):
@@ -48,18 +51,14 @@ class FasterRCNNPascal():
                 # if confidence threshold is not set, default=0.8
                 if req.confidence_threshold == 0:
                     self.detect_objects(results,self.net,cv_image,index)
-                    
+
                 else:
                     self.detect_objects(results,self.net,cv_image,index,req.confidence_threshold)
-		    
+
 		    #results.append(result)
             except CvBridgeError as e:
                 print(e)
-                del self.net
-                self.net = None
                 return DetectObjectsResponse([])
-        del self.net
-        self.net = None
         return DetectObjectsResponse(results)
 
     def handle_getlabels_req(self,req):
@@ -110,7 +109,10 @@ class FasterRCNNPascal():
             #vis_detections(im, cls, dets, thresh=CONF_THRESH)
         #return objects
 
-
+    def unload_net_callback(self,event):
+        if self.net != None:
+            del self.net
+            self.net = None
 
     def __init__(self, gpu_id=None, network_name='vgg16'):
         rp = RosPack()
@@ -145,8 +147,10 @@ class FasterRCNNPascal():
         if network_name.find('Res')>=0:
             self.prototxt = os.path.join(path,'rfcn', self.NETS[network_name][0],'test_agnostic.prototxt')
 
-	self.net = None
+        self.net = None
+        self.unload_net_timer = None
         self.gpu_id = gpu_id
+
 
         self.caffemodel = os.path.join(path, 'caffe', self.NETS[network_name][1])
 
