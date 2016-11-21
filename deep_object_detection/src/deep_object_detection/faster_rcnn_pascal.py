@@ -31,7 +31,8 @@ class FasterRCNNPascal():
 
     """ The handle for object detection service requests """
     def handle_detect_objects_req(self,req):
-        if self.net == None:
+        self.service_queue += 1
+	if self.net == None:
             self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
         if self.unload_net_timer:
             self.unload_net_timer.shutdown()
@@ -58,8 +59,10 @@ class FasterRCNNPascal():
 		    #results.append(result)
             except CvBridgeError as e:
                 print(e)
+                self.service_queue -=1
                 return DetectObjectsResponse([])
-        return DetectObjectsResponse(results)
+        self.service_queue -=1
+	return DetectObjectsResponse(results)
 
     def handle_getlabels_req(self,req):
         return GetLabelsResponse(self.CLASSES)
@@ -110,9 +113,10 @@ class FasterRCNNPascal():
         #return objects
 
     def unload_net_callback(self,event):
-        if self.net != None:
+        if self.net != None and self.service_que <= 0:
             del self.net
             self.net = None
+            self.service_queue =0
 
     def __init__(self, gpu_id=None, network_name='vgg16'):
         rp = RosPack()
@@ -150,6 +154,7 @@ class FasterRCNNPascal():
         self.net = None
         self.unload_net_timer = None
         self.gpu_id = gpu_id
+        self.service_que = 0
 
 
         self.caffemodel = os.path.join(path, 'caffe', self.NETS[network_name][1])
