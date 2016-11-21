@@ -14,7 +14,7 @@ export LIBRARY_PATH=/path_to_cudnnv3/lib64:$LIBRARY_PATH
 * Navigate into the repo directory. Under the repo directory, you need to clone the specific version of the Caffe. Use the following commands to get the required version:
 ```
 git clone https://github.com/rbgirshick/caffe-fast-rcnn.git
-git checkout 0dcd397b29507b8314e252e850518c5695efbb83 .
+git checkout 0dcd397b29507b8314e252e850518c5695efbb83 
 ```
 * After cloning the Caffe repo, modify the *Makefile.config* file. Uncomment the *USE_CUDNN* flag and set it to 1.
 Also uncomment the *WITH_PYTHON_LAYER* flag and set it to 1. Build the Caffe libraries. Do not forget to make the python libraries also using the command `make pycaffe`.
