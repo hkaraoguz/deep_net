@@ -4,3 +4,4 @@ bbox.c
 *.tar.gz
 *.tgz
 *~
+*.pyc
