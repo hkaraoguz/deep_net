@@ -33,7 +33,13 @@ class FasterRCNNPascal():
     def handle_detect_objects_req(self,req):
         self.service_queue += 1
         if self.net == None:
-            self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
+            try:
+                self.net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
+            except:
+                rospy.logerr("Error, cannot load deep_net to the GPU")
+                self.net =None
+                self.service_queue -=1
+                return DetectObjectsResponse([])
         if self.unload_net_timer != None:
             self.unload_net_timer.shutdown()
             del self.unload_net_timer
