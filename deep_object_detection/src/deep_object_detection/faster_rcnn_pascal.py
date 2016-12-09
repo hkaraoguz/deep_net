@@ -23,7 +23,7 @@ import caffe
 import cv2
 import argparse
 from deep_object_detection.srv import *
-from deep_object_detection.msg import Object
+from deep_object_detection.msg import Object, DetectedObjects
 from cv_bridge import CvBridge, CvBridgeError
 
 """ FasterRCNNPascal class for object detection """
@@ -78,6 +78,10 @@ class FasterRCNNPascal():
                 self.service_queue -=1
                 return DetectObjectsResponse([])
         self.service_queue -=1
+        detectedobjects = DetectedObjects()
+        detectedobjects.objects = results
+        detectedobjects.observation_path = req.observation_path
+        self.detectedobjectspub.publish(detectedobjects)
         return DetectObjectsResponse(results)
 
     def handle_getlabels_req(self,req):
@@ -191,5 +195,6 @@ class FasterRCNNPascal():
 
         s = rospy.Service('deep_object_detection/detect_objects', DetectObjects, self.handle_detect_objects_req)
         s2 = rospy.Service('deep_object_detection/get_labels', GetLabels, self.handle_getlabels_req)
+        self.detectedobjectspub = rospy.Publisher("deep_object_detection/detected_objects",DetectedObjects,queue_size=10)
         rospy.loginfo("Ready to detect objects")
         rospy.spin()

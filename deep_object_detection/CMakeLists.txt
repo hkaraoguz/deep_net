@@ -49,6 +49,7 @@ catkin_python_setup()
  add_message_files(
    FILES
    Object.msg
+   DetectedObjects.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -70,6 +71,7 @@ catkin_python_setup()
    DEPENDENCIES
    std_msgs 
    sensor_msgs
+   deep_object_detection
  )
 
 ################################################

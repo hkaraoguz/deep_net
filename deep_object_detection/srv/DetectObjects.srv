@@ -1,5 +1,7 @@
 sensor_msgs/Image[] images # image that will be analyzed
 
+string observation_path # optional parameter for the observation xml path
+
 float32 confidence_threshold # the confidence threshold. The default value is 0.8
 
 ---
