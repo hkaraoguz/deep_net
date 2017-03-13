@@ -59,6 +59,7 @@ class FasterRCNNPascal():
                 # if confidence threshold is not set, default=0.8
                 if req.confidence_threshold == 0:
                     try:
+                        #rospy.logerr("Hello")
                         self.detect_objects(results,self.net,cv_image,index)
                     except:
                         rospy.logwarn("Error!! Could not execute detect_object function!! Returning empty service response")
@@ -67,7 +68,8 @@ class FasterRCNNPascal():
                 else:
                     try:
                         self.detect_objects(results,self.net,cv_image,index,req.confidence_threshold)
-                    except:
+                    except ValueError, Argument:
+                        rospy.logerr("%s",Argument)
                         rospy.logwarn("Error!! Could not execute detect_object function!! Returning empty service response")
                         self.service_queue-=1
                         return DetectObjectsResponse([])
@@ -106,7 +108,7 @@ class FasterRCNNPascal():
 
     def detect_objects(self,results,net, image,image_index=0,conf_thresh=0.8):
         """Detect object classes in an image using pre-computed object proposals."""
-
+        #rospy.logerr("Starting detection...")
         # Detect all object classes and regress object bounds
         timer = Timer()
         timer.tic()
@@ -167,19 +169,31 @@ class FasterRCNNPascal():
 		     'vgg16KTH': ('VGG16KTH',
                       'vgg16_faster_rcnn_iter_40000_kth2.caffemodel'),
             'zf': ('ZF',
-                      'ZF_faster_rcnn_final.caffemodel'), 'ResNet-101': ('ResNet-101',
+                      'ZF_faster_rcnn_final.caffemodel'),
+            'ResNet-101': ('ResNet-101',
                   'resnet101_rfcn_final.caffemodel'),
         'ResNet-50': ('ResNet-50',
-                  'resnet50_rfcn_final.caffemodel')}
+                  'resnet50_rfcn_final.caffemodel'),
+        'ResNet-101coco':('ResNet-101','resnet101_rfcn_coco.caffemodel')
+        }
         if network_name == 'vgg16KTH':
             self.CLASSES = ('__background__',
               'chair','laptop','monitor')
+        if network_name.find('coco') >= 0:
+            self.CLASSES = ('__background__','person','bicycle','car','motorbike','aeroplane','bus','train','truck','boat','traffic_light','fire_hydrant','stop_sign','parking_meter','bench','bird','cat',
+                            'dog','horse','sheep','cow','elephant','bear','zebra','giraffe','backpack','umbrella','handbag','tie','suitcase','frisbee','skis','snowboard','sports_ball','kite', 'baseball_bat',
+                            'baseball_glove','skateboard','surfboard','tennis_racket','bottle','wine_glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich','orange','broccoli',
+                            'carrot','hot_dog','pizza','donut','cake','chair','sofa','pottedplant','bed','diningtable','toilet','tvmonitor','laptop','mouse','remote','keyboard','cell_phone',
+                            'microwave','oven','toaster','sink','refrigerator','book','clock','vase','scissors','teddy_bear','hair_drier','toothbrush')
 
 
         cfg.TEST.HAS_RPN = True  # Use RPN for proposals
         self.prototxt = os.path.join(path, network_name,'protos', 'faster_rcnn_test.pt')
         if network_name.find('Res')>=0:
-            self.prototxt = os.path.join(path,'rfcn', self.NETS[network_name][0],'test_agnostic.prototxt')
+            if not network_name.find('coco')>=0:
+                self.prototxt = os.path.join(path,'rfcn', self.NETS[network_name][0],'test_agnostic.prototxt')
+            else:
+                self.prototxt = os.path.join(path,'rfcn', 'coco',self.NETS[network_name][0],'test_agnostic.prototxt')
 
         self.net = None
         self.unload_net_timer = None

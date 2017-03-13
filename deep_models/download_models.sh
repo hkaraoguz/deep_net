@@ -19,7 +19,7 @@ fi
 
 
 FILE=rfcn_models.tar.gz
-URL=https://www.dropbox.com/s/lnz0r8uk9ax1mey/rfcn_models.tar.gz?dl=1
+URL=https://www.dropbox.com/s/stqbtjaiwb506h2/rfcn_models.tar.gz?dl=1
 if [ -f $FILE ]; then
   echo "rfcn model File already exists."
   echo "Unzipping..."
@@ -30,8 +30,8 @@ else
   echo "Downloading rfcn models..."
   wget $URL -O $FILE -P ./caffe
   tar zxvf $FILE
-  mv ./rfcn_models/* .
-  rm -r ./rfcn_models
+  #mv ./rfcn_models/* .
+  #rm -r ./rfcn_models
 fi
 
 
