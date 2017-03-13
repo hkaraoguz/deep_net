@@ -3,7 +3,7 @@
 import rospy
 import argparse
 
-from deep_object_detection.deep_object_detection import *
+from deep_object_detection.object_detection import *
 
 
 if __name__=="__main__":
@@ -22,4 +22,4 @@ if __name__=="__main__":
   rospy.init_node("deep_object_detection_node")
   rospy.loginfo("Starting deep object detection node")
 
-  FasterRCNNPascal(args.gpu_id,args.demo_net)
+  DeepObjectDetection(args.gpu_id,args.demo_net)
