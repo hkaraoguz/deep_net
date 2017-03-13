@@ -3,6 +3,8 @@
 """
 ROS Node for object detection using py-faster-rcnn
 https://github.com/rbgirshick/py-faster-rcnn.git
+or py-r-fcn
+https://github.com/Orpine/py-R-FCN.git
 """
 import roslib; roslib.load_manifest("deep_object_detection")
 import rospy
@@ -26,8 +28,8 @@ from deep_object_detection.srv import *
 from deep_object_detection.msg import Object, DetectedObjects
 from cv_bridge import CvBridge, CvBridgeError
 
-""" FasterRCNNPascal class for object detection """
-class FasterRCNNPascal():
+""" DeepObjectDetection class for object detection """
+class DeepObjectDetection():
 
     """ The handle for object detection service requests """
     def handle_detect_objects_req(self,req):

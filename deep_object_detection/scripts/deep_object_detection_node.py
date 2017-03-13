@@ -3,7 +3,7 @@
 import rospy
 import argparse
 
-from deep_object_detection.faster_rcnn_pascal import *
+from deep_object_detection.deep_object_detection import *
 
 
 if __name__=="__main__":
@@ -15,7 +15,7 @@ if __name__=="__main__":
   parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use. Default -1 (CPU Mode Enabled)',
                       default=-1, type=int)
 
-  parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16,vgg16KTH,zf]', default='vgg16')
+  parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16,vgg16KTH,zf,ResNet-50,ResNet-101,ResNet-101coco]', default='vgg16')
 
   args = parser.parse_args((rospy.myargv()[1:]))
 
