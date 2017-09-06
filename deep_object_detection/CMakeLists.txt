@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   message_generation
   cv_bridge
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -71,6 +72,7 @@ catkin_python_setup()
    DEPENDENCIES
    std_msgs 
    sensor_msgs
+   geometry_msgs
    deep_object_detection
  )
 
@@ -106,7 +108,7 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES deep_object_detection
-  CATKIN_DEPENDS rospy std_msgs sensor_msgs message_runtime cv_bridge
+  CATKIN_DEPENDS rospy std_msgs sensor_msgs message_runtime cv_bridge geometry_msgs
 #  DEPENDS system_lib
 )
 

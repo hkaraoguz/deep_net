@@ -11,6 +11,8 @@ import rospy
 from rospkg import RosPack
 import sys
 import os
+import copy
+import scipy
 
 
 from fast_rcnn.config import cfg
@@ -26,6 +28,7 @@ import cv2
 import argparse
 from deep_object_detection.srv import *
 from deep_object_detection.msg import Object, DetectedObjects
+from geometry_msgs.msg import Point
 from cv_bridge import CvBridge, CvBridgeError
 
 """ DeepObjectDetection class for object detection """
@@ -105,7 +108,138 @@ class DeepObjectDetection():
             del self.unload_net_timer
             self.unload_net_timer = None
 
+    def calculate_largest_contour(self,heatmap_img,prob_img):
 
+        points = []
+        contours, hierarchy = cv2.findContours(heatmap_img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE )
+
+        if len(contours) == 0:
+            return points
+
+        maxContour = 0
+        for contour in contours:
+            contourSize = cv2.contourArea(contour)
+            if contourSize > maxContour:
+                maxContour = contourSize
+                maxContourData = contour
+        '''
+        for contour in contours:
+            contourSize = cv2.contourArea(contour)
+            if contourSize > maxContour:
+                maxContour = contourSize
+                maxContourData = contour
+        '''
+
+
+        #cv2.pointPolygonTest(contour, pt, measureDist)
+        # Create a mask from the largest contour
+        mask = np.zeros_like(heatmap_img)
+        cv2.fillPoly(mask,[maxContourData],1)
+
+
+
+        for i in xrange(mask.shape[0]):
+            for j in xrange(mask.shape[1]):
+                if mask[i,j] > 0:
+                    p = Point()
+                    p.x = j
+                    p.y = i
+                    p.z = prob_img[i,j]
+                    points.append(p)
+
+
+        return points
+
+    def convertHeatMaptoArray(self,heatmap_img,bbox):
+        points = []
+        for i in xrange(heatmap_img.shape[0]):
+            for j in xrange(heatmap_img.shape[1]):
+
+                    p = Point()
+                    p.x = j + bbox[0]
+                    p.y = i + bbox[1]
+                    p.z = heatmap_img[i,j]
+                    points.append(p)
+        return points
+
+
+
+    def extract_score_map_mask(self,im,det,cls_index,bbox,thresh=0.5):
+
+        """Check if we have the blob for position sensitive score maps."""
+        if any('rfcn_cls' in s for s in self.net.blobs.keys()):
+            cls_feat = self.net.blobs['rfcn_cls'].data[0]
+        else:
+             return None
+
+        #cls_index -= 1
+        org_img = im.copy()
+
+        head, last = cls_index * 49, (cls_index + 1)*49
+        data = cls_feat[head:last]
+
+        im_info = self.net.blobs['im_info']
+
+        bboxwidth = bbox[2] - bbox[0]
+        bboxheight = bbox[3] - bbox[1]
+
+        x_ratio = np.round(float(bboxwidth)/7)
+        y_ratio =np.round(float(bboxheight)/7)
+        # normalize data for display, from 1 ~ 0
+        data = (data - data.min()) / (data.max() - data.min())
+        copydata = copy.deepcopy(data)
+
+        activation_map = copydata[0]
+
+        im2activation_ratio = float(im.shape[1])/activation_map.shape[1]
+        print im2activation_ratio
+        bbox_scaled = bbox/im2activation_ratio;
+        print bbox_scaled
+        resulting_map = np.zeros(((bbox_scaled[3]-bbox_scaled[1]),(bbox_scaled[2]-bbox_scaled[0])))
+        x_ratio = float(resulting_map.shape[1])/7
+        y_ratio = float(resulting_map.shape[0])/7
+        #print resulting_map.shape
+        for j in xrange(7):
+            for k in xrange(7):
+                activation_map = copydata[j*7 + k]
+
+                y_lower = np.round(j*y_ratio)
+                x_lower = np.round(k*x_ratio)
+
+                y_upper = np.round((j+1)*y_ratio)
+                x_upper = np.round((k+1)*x_ratio)
+
+                resulting_map[y_lower:y_upper,x_lower:x_upper] = activation_map[bbox_scaled[1] + y_lower:bbox_scaled[1] + y_upper,bbox_scaled[0] + x_lower:bbox_scaled[0]+x_upper]
+
+
+
+        out = scipy.ndimage.interpolation.zoom(input=resulting_map, zoom=(im2activation_ratio), order = 2)
+        medval = np.median(out)
+        #print out
+
+
+        org_img_gray = np.zeros((org_img.shape[0],org_img.shape[1]), np.uint8)
+        cv2.cvtColor(org_img, cv2.COLOR_BGR2GRAY,org_img_gray)
+        contour_image = np.zeros_like(org_img_gray)
+        out_image = np.zeros((org_img_gray.shape[0],org_img_gray.shape[1]))
+
+        mask = self.convertHeatMaptoArray(out,bbox)
+
+        return mask
+
+        for m in xrange(out.shape[0]):
+            for n in xrange(out.shape[1]):
+                if out[m,n]>= medval:
+                    contour_image[bbox[1]+m,bbox[0]+n] = 255
+                    out_image[bbox[1]+m,bbox[0]+n] = out[m,n]
+                    #print out_image[bbox[1]+m,bbox[0]+n]
+        #print "max and index ",np.amax(out_image)," ", np.unravel_index(out_image.argmax(), out_image.shape)
+        #cv2.imshow("out",out)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
+        mask = self.calculate_largest_contour(contour_image,out_image)
+
+        return mask
 
 
     def detect_objects(self,results,net, image,image_index=0,conf_thresh=0.8):
@@ -147,6 +281,7 @@ class DeepObjectDetection():
                     obj.height = bbox[3]-bbox[1]
                     obj.confidence = score
                     obj.imageID = image_index
+                    obj.mask = self.extract_score_map_mask(image,i,cls_ind,bbox,0.6)
 		    results.append(obj)
             #vis_detections(im, cls, dets, thresh=CONF_THRESH)
         #return objects
