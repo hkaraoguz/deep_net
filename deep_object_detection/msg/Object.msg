@@ -1,3 +1,4 @@
+Header header
 string label   # label of the object
 uint32 x       # x coordinate of the anchor position of bounding box
 uint32 y       # y coordinate of the anchor position of bounding box

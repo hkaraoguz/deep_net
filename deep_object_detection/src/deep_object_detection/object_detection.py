@@ -147,6 +147,7 @@ class DeepObjectDetection():
                     obj.height = bbox[3]-bbox[1]
                     obj.confidence = score
                     obj.imageID = image_index
+                    obj.header.stamp = rospy.Time.now()
 		    results.append(obj)
             #vis_detections(im, cls, dets, thresh=CONF_THRESH)
         #return objects
